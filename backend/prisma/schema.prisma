@@ -14,18 +14,18 @@ datasource db {
   
 }
 
-model user {
+model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  tasks     task[]
+  tasks     Task[]
 }
 
-model task {
+model Task {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
   completed   Boolean  @default(false)
   userId      Int
-  author      user     @relation(fields: [userId], references: [id])
+  author      User     @relation(fields: [userId], references: [id])
 }
