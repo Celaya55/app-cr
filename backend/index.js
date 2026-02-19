@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken'); // Para manejar la seguridad (tokens)
 
 const prisma = new PrismaClient();
 const app = express();
-const JWT_SECRET = "mi_clave_secreta"; // Una clave para firmar tus tokens
+const Token = process.env.JWT_SECRET;// Una clave para firmar tus tokens
 
 // Middlewares: Funciones que procesan la info antes de llegar a las rutas
 app.use(cors()); 
