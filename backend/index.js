@@ -11,3 +11,14 @@ const Token = process.env.JWT_SECRET;// Una clave para firmar tus tokens
 // Middlewares: Funciones que procesan la info antes de llegar a las rutas
 app.use(cors()); 
 app.use(express.json()); // Permite que tu servidor entienda archivos JSON
+
+app.post('/usuarios', async (req, res) => {
+  try {
+    const nuevoUsuario = await prisma.user.create({
+      data: req.body, 
+    });
+    res.status(201).json(nuevoUsuario);
+  } catch (error) {
+    res.status(500).json({ error: "Error al insertar en Postgres" });
+  }
+});
