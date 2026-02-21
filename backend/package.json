@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js && npx prisma studio",
-    "dev": "node index.js && npx prisma studio"
+  "start": "concurrently \"node index.js\" \"npx prisma studio\"",
+  "dev": "concurrently \"node index.js\" \"npx prisma studio\""
   },
   "keywords": [],
   "author": "",
@@ -22,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
+    "concurrently": "^9.2.1",
     "dotenv": "^17.3.1"
   }
 }
