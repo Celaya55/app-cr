@@ -23,10 +23,16 @@ app.listen(PORT, () => {
 
 app.post('/usuarios', async (req, res) => {
   try {
+    // Basicamente aqui jalo el email y el password para despues hashaer la password
+    // OJO: Se debe hashear antes de el 'prisma.user.create'
+    const { email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const nuevoUsuario = await prisma.user.create({
       data: {
         email: req.body.email,
-        password: req.body.password
+        // Aqui en lugar de pasarle el valor: req.body.password, se le pasa el valor que definimos arriba hashedPassword
+        password: hashedPassword
       }
     });
     res.status(201).json(nuevoUsuario);
