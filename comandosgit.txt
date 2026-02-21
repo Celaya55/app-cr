@@ -1,0 +1,44 @@
+
+================================================================
+GUÍA RÁPIDA: SUBIR Y BAJAR CAMBIOS EN DEVELOP
+================================================================
+
+PARTE 1: LO QUE HACES TÚ (Subir tus cambios)
+----------------------------------------------------------------
+Asegúrate de estar en tu rama de trabajo:
+git checkout feature/tu rama
+
+Agrega los archivos que arreglaste (incluyendo el package.json):
+git add .
+
+Cierra el ciclo del merge/conflicto con un commit:
+git commit -m "tu mensaje"
+
+Pásate a la rama principal:
+git checkout develop
+
+Trae lo que hiciste en tu rama a develop:
+git merge feature/tu_feature
+
+Sube todo al servidor (la nube) para que otros lo vean:
+git push origin develop
+
+
+PARTE 2: LO QUE HACE TU COMPA (Bajar tus cambios)
+----------------------------------------------------------------
+Cambiarse a la rama develop:
+git checkout develop
+
+Bajar los cambios nuevos que tú subiste:
+git pull origin develop
+
+¡MUY IMPORTANTE! Como hubo cambios en package.json, debe actualizar:
+npm install(Esto evita errores de "módulo no encontrado" en el backend)
+
+
+NOTAS IMPORTANTES:
+Si el 'git pull' le da error a tu compa, que use 'git status' 
+para ver si tiene cambios locales sin guardar.
+Si tiene cambios que no quiere borrar, puede usar 'git stash' 
+antes del pull y 'git stash pop' después.
+================================================================ 

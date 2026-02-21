@@ -55,3 +55,23 @@ app.get('/usuarios', async (req, res) => {
     res.status(500).json({ error: "Error al consultar registros en Postgres" });
   }
 });
+// Nota: No puedes borrar un usuario si tiene tareas asociadas, primero debes borrar las tareas
+//  o eliminar la relación entre el usuario y las tareas antes de intentar eliminar el usuario. 
+app.delete('/usuarios/:id', async (req, res) => {
+  try{
+    const borrarUsuario= await prisma.user.delete({
+      where: {
+        id: parseInt(req.params.id)
+      }
+    })
+    res.status(200).json({ message: `Usuario con ID ${req.params.id} eliminado exitosamente.` });
+  }catch(error){
+    if (error.code === 'P2025') {
+      return res.status(404).json({ 
+        error: `El usuario con ID ${req.params.id} no existe en la base de datos.` 
+      });
+    }
+    console.log("DETALLE DEL ERROR:", error); // Esto te dirá exactamente qué falló en la terminal
+    res.status(500).json({ error: "Error al intentar eliminar registros en Postgres" });
+  }
+});
