@@ -35,3 +35,17 @@ app.post('/usuarios', async (req, res) => {
     res.status(500).json({ error: "Error al insertar en Postgres" });
   }
 });
+app.get('/usuarios', async (req, res) => {
+  try{
+    const consultaUsuario= await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true, 
+        tasks: true
+    }});
+    res.status(200).json(consultaUsuario);
+  }catch(error){
+    console.log("DETALLE DEL ERROR:", error); // Esto te dirá exactamente qué falló en la terminal
+    res.status(500).json({ error: "Error al consultar registros en Postgres" });
+  }
+});
