@@ -23,7 +23,7 @@ app.listen(PORT, () => {
 
 app.post('/usuarios', async (req, res) => {
   try {
-    // Basicamente aqui jalo el email y el password para despues hashaer la password
+    // Nota: Basicamente aqui jalo el email y el password para despues hashaer la password
     // OJO: Se debe hashear antes de el 'prisma.user.create'
     const { email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,7 +31,7 @@ app.post('/usuarios', async (req, res) => {
     const nuevoUsuario = await prisma.user.create({
       data: {
         email: req.body.email,
-        // Aqui en lugar de pasarle el valor: req.body.password, se le pasa el valor que definimos arriba hashedPassword
+        // Nota: Aqui en lugar de pasarle el valor: req.body.password, se le pasa el valor que definimos arriba hashedPassword
         password: hashedPassword
       }
     });
@@ -41,9 +41,10 @@ app.post('/usuarios', async (req, res) => {
     res.status(500).json({ error: "Error al insertar en Postgres" });
   }
 });
+
 app.get('/usuarios', async (req, res) => {
   try{
-    const consultaUsuario= await prisma.user.findMany({
+    const consultaUsuario = await prisma.user.findMany({
       select: {
         id: true,
         email: true, 
@@ -55,11 +56,12 @@ app.get('/usuarios', async (req, res) => {
     res.status(500).json({ error: "Error al consultar registros en Postgres" });
   }
 });
+
 // Nota: No puedes borrar un usuario si tiene tareas asociadas, primero debes borrar las tareas
 //  o eliminar la relación entre el usuario y las tareas antes de intentar eliminar el usuario. 
 app.delete('/usuarios/:id', async (req, res) => {
   try{
-    const borrarUsuario= await prisma.user.delete({
+    const borrarUsuario = await prisma.user.delete({
       where: {
         id: parseInt(req.params.id)
       }
@@ -73,5 +75,40 @@ app.delete('/usuarios/:id', async (req, res) => {
     }
     console.log("DETALLE DEL ERROR:", error); // Esto te dirá exactamente qué falló en la terminal
     res.status(500).json({ error: "Error al intentar eliminar registros en Postgres" });
+  }
+});
+
+app.patch('/usuarios/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { email, password } = req.body;
+    const data = {};
+    if (email) {
+      data.email = email;
+    }
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      data.password = hashedPassword;
+    }
+    // Corroborar que al menos exista un campo para actualizar
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({
+        error: "Debe proporcionar al menos un campo para actualizar."
+      });
+    }
+    // Actualizar usuario
+    const usuarioActualizado = await prisma.user.update({
+      where: { id: id },
+      data: data
+    });
+    res.status(200).json(usuarioActualizado);
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        error: `El usuario con ID ${req.params.id} no existe en la base de datos.`
+      });
+    }
+    console.log("DETALLE DEL ERROR:", error);
+    res.status(500).json({ error: "Error al actualizar usuario en Postgres" });
   }
 });
