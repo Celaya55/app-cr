@@ -28,7 +28,7 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1]; // Separamos "Bearer" del token
 
   if (!token) {
-    return res.status(401).json({ error: "No se proporcionó un token de acceso" });
+    return res.status(401).json({ error: "Nse pro oporcionó un token de acceso" });
   }
 
   // 2. Verificamos que el token sea válido con nuestro SECRET del .env
@@ -155,7 +155,7 @@ app.post('/login', async (req, res) => {
   const token = jwt.sign(
     { userId: user.id, email: user.email }, 
     process.env.JWT_SECRET, 
-    { expiresIn: '8h' } // El token expira en 8 horas
+    { expiresIn: '1h' } // El token expira en 1 hora
   );
 
   res.json({ token });
