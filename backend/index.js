@@ -20,8 +20,30 @@ app.use(express.json()); // Permite que tu servidor entienda archivos JSON
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en: http://localhost:${PORT}`);
 });
+//midleware para verificar el token en las rutas protegidas
 
-app.post('/usuarios', async (req, res) => {
+const authenticateToken = (req, res, next) => {
+  // 1. Buscamos el token en los headers
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Separamos "Bearer" del token
+
+  if (!token) {
+    return res.status(401).json({ error: "No se proporcionó un token de acceso" });
+  }
+
+  // 2. Verificamos que el token sea válido con nuestro SECRET del .env
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: "Token inválido o expirado" });
+    }
+    
+    // Si es válido, guardamos los datos del usuario en el request
+    req.user = decoded;
+    next(); // Saltamos a la función de la ruta
+  });
+};
+
+app.post('/usuarios', authenticateToken, async (req, res) => {
   try {
     // Nota: Basicamente aqui jalo el email y el password para despues hashaer la password
     // OJO: Se debe hashear antes de el 'prisma.user.create'
@@ -42,7 +64,7 @@ app.post('/usuarios', async (req, res) => {
   }
 });
 
-app.get('/usuarios', async (req, res) => {
+app.get('/usuarios', authenticateToken, async (req, res) => {
   try{
     const consultaUsuario = await prisma.user.findMany({
       select: {
@@ -59,7 +81,7 @@ app.get('/usuarios', async (req, res) => {
 
 // Nota: No puedes borrar un usuario si tiene tareas asociadas, primero debes borrar las tareas
 //  o eliminar la relación entre el usuario y las tareas antes de intentar eliminar el usuario. 
-app.delete('/usuarios/:id', async (req, res) => {
+app.delete('/usuarios/:id', authenticateToken,async (req, res) => {
   try{
     const borrarUsuario = await prisma.user.delete({
       where: {
@@ -78,7 +100,7 @@ app.delete('/usuarios/:id', async (req, res) => {
   }
 });
 
-app.patch('/usuarios/:id', async (req, res) => {
+app.patch('/usuarios/:id', authenticateToken, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { email, password } = req.body;
@@ -111,4 +133,30 @@ app.patch('/usuarios/:id', async (req, res) => {
     console.log("DETALLE DEL ERROR:", error);
     res.status(500).json({ error: "Error al actualizar usuario en Postgres" });
   }
+});
+
+// Ruta para el login con JWT
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  // 1. Buscar al usuario en Postgres con Prisma
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user) {
+    return res.status(401).json({ error: "Usuario no encontrado" });
+  }
+
+  // 2. Verificar la contraseña (asumiendo que la guardaste encriptada)
+  const validPassword = await bcrypt.compare(password, user.password);
+  if (!validPassword) {
+    return res.status(401).json({ error: "Contraseña incorrecta" });
+  }
+
+  // 3. Crear el token usando tu secreto del .env
+  const token = jwt.sign(
+    { userId: user.id, email: user.email }, 
+    process.env.JWT_SECRET, 
+    { expiresIn: '8h' } // El token expira en 8 horas
+  );
+
+  res.json({ token });
 });
